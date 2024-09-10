@@ -1,10 +1,13 @@
 const express = require('express');
+const cors = require('cors');
 const multer = require('multer');
 const uuid = require('uuid');
 const path = require('path');
 
 const app = express();
+app.use(cors());
 const PORT = 3000;
+app.use('/uploads', express.static('uploads'));
 
 // Acá se configura Multer para la subida de fotos
 const storage = multer.diskStorage({
@@ -21,33 +24,37 @@ const upload = multer({storage:storage});
 let appointments = [];
 
 // Ruta del POST para crear una cita
-app.post('/crear-cita', upload.single('autorizacion'), (req, res) =>{
-    const {id, date} = req.body;
-    const autorization = req.file.filename;
+app.post('/crear-cita', upload.single('authorization'), (req, res) =>{
+    const {cc, date} = req.body;
+    const authorization = req.file.filename;
     const appointmentCode = uuid.v4();
 
     const newAppointment = {
         codigo: appointmentCode,
-        id,
+        cc,
         date,
-        autorizacion: autorization,
+        autorizacion: authorization,
         estado: 'activa'
     };
 
     appointments.push(newAppointment);
-    res.json({code:appointmentCode, message: 'Cita creada exitosamente.'});
+    res.json({codigo:appointmentCode, message: 'Cita creada exitosamente.'});
 });
 
 // Ruta del GET para consultar las citas que tengamos
 app.get('/consultar-citas', (req, res) => {
-    const {startDate, endDate} = req.query;
+    const { startDate, endDate } = req.query;
 
-    const appointmentsInRate = appointments.filter(appointment => {
-        const appointmentDate = new Date (appointment.Date);
+    // Filtrar citas dentro del rango de fechas
+    const appointmentsInRange = appointments.filter(appointment => {
+        const appointmentDate = new Date(appointment.date);
         return appointmentDate >= new Date(startDate) && appointmentDate <= new Date(endDate);
-    });
+    }).map(appointment => ({
+        ...appointment,
+        autorizacion: `http://localhost:3000/uploads/${appointment.authorizacion}`
+    }));
 
-    res.json(appointmentsInRate);
+    res.json(appointmentsInRange);
 });
 
 // Ruta del DELETE para cancelar o eliminar alguna de las citas almacenadas
@@ -55,13 +62,13 @@ app.get('/consultar-citas', (req, res) => {
 app.delete('/cancelar-cita/:code', (req, res) => {
     const {code} = req.params;
 
-    const appointment = appointments.find(appointment => appointment.code === code);
+    const appointment = appointments.find(appointment => appointment.codigo === code);
 
     if(!appointment){
         return res.status(404).json({message: 'Cita no encontrada.'});
     }
 
-    appointment.status = 'canceled';
+    appointment.estado = 'canceled';
     res.json({message: `Cita co codigo ${code} ha sido cancelada.`})
 });
 
