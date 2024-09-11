@@ -13,3 +13,8 @@ Se utilizan las siguientes tecnologías y paquetes:
 - **Express.js**: Framework web para manejar las rutas y peticiones HTTP.
 - **Multer**: Middleware para la subida de archivos (en este caso, las imágenes de autorización).
 - **UUID**: Generación de identificadores únicos para las citas.
+
+Integrantes: 
+Pedro Eduardo Cruz López
+Jhon Jairo Castro Mancipe
+Juan Sebastian Zárate Ortiz
